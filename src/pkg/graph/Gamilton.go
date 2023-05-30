@@ -1,7 +1,6 @@
 package graph
 
 import (
-	"fmt"
 	"log"
 )
 
@@ -55,7 +54,7 @@ func (g *Graph) hamiltonCycle(path []int, pos int) bool {
 }
 
 // hamiltonian инициирует поиск гамильтонова цикла
-func (g *Graph) Hamiltonian() []int {
+func (g *Graph) Hamiltonian(startV int) []int {
 
 	Am := copy2DSlice(g.Amatrix)
 
@@ -67,7 +66,7 @@ func (g *Graph) Hamiltonian() []int {
 	}
 
 	// Начинаем с вершины 0
-	path[0] = 0
+	path[0] = startV
 	if !g.hamiltonCycle(path, 1) {
 		g.Amatrix = Am
 		return []int{}
@@ -89,11 +88,11 @@ func (g *Graph) Hamiltonian() []int {
 то возвращается true, и мы нашли гамильтонов цикл.
 */
 
-func (G *Graph) GamiltonTransform() {
+func (g *Graph) GamiltonTransform() {
 
 	log.Print("func (G *Graph) EilerTransform() ")
 	log.Print("делаем граф неориентированным")
-	G.OrientToUnoriet()
+	g.OrientToUnoriet()
 
 	/*
 		пока index, минимальный элемент из списка степеней вершин < n/2 {
@@ -101,51 +100,31 @@ func (G *Graph) GamiltonTransform() {
 			добавить столько вершин, чтобы его степень была n/2
 		}
 	*/
-	// список вершин с нечетной степенью
-	oddV := listOddV(G)
 
-	fmt.Printf("список вершин с нечетными степенями %d \n", oddV)
-	G.PrintLabel("граф:")
-
-	pairs := getPairs(oddV, 0)
-
-	for _, pair := range pairs {
-		if G.Amatrix[pair[0]][pair[1]] == 0 {
-
-			FlagP0inOddV := false
-			FlagP1inOddV := false
-
-			for _, v := range oddV {
-				if v == pair[0] {
-					FlagP0inOddV = true
+	{
+		n := len(g.Amatrix)
+		for v := 0; v < n; v++ {
+			for i := 0; i < n; i++ {
+				if g.degree(v) >= n/2 {
+					break
 				}
-				if v == pair[1] {
-					FlagP1inOddV = true
+				if v != i && g.Amatrix[v][i] == 0 {
+					g.Amatrix[v][i] = 1
+					g.Amatrix[i][v] = 1
 				}
 			}
-
-			//если оба значения есть в списке не четных
-			if FlagP0inOddV && FlagP1inOddV {
-				G.Amatrix[pair[0]][pair[1]] = 1
-				G.Amatrix[pair[1]][pair[0]] = 1
-
-				G.BandwidthMatrix[pair[0]][pair[1]] = 1
-				G.BandwidthMatrix[pair[1]][pair[0]] = 1
-
-				//удаляем вершины из списка не четных
-				for i, v := range oddV {
-					if v == pair[0] || v == pair[1] {
-						oddV[i] = -1
-					}
-
-				}
-
-				fmt.Printf("добавленая связь %d - %d\n", pair[0], pair[1])
-			}
-
-		} else {
-			continue
 		}
 	}
 
+}
+
+func (g *Graph) HamiltonWeight() (w int) {
+	path := g.Hamiltonian(0)
+
+	for i := 1; i < len(path); i++ {
+		w += g.Amatrix[path[i-1]][path[i]]
+		//fmt.Printf("%d += weight(%d, %d)\n", w, path[i-1], path[i])
+	}
+
+	return w
 }

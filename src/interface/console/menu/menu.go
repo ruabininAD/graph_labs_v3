@@ -238,8 +238,11 @@ func (myMenu *Menu) MainMenu() {
 		PruferCode := myMenu.graph.PruferCode()
 		fmt.Printf("Код прюфера: %v \n", PruferCode)
 	case 15:
-		myMenu.lab6()
-
+		if myMenu.graph.GetVCount() < 3 {
+			fmt.Println("Слишком мало вершин ")
+		} else {
+			myMenu.lab6()
+		}
 	default:
 		fmt.Println("не та кнопочка")
 	}
@@ -333,22 +336,16 @@ func (myMenu *Menu) lab6() {
 		myMenu.graph.OrientToUnoriet()
 		// проверка на гамильтонов граф
 		{
-			HamiltonTour := myMenu.graph.Hamiltonian()
+			HamiltonFlag := len(myMenu.graph.Hamiltonian(0)) >= 2
 
-			HamiltonFlag := true
-			if len(HamiltonTour) < 2 {
-				HamiltonFlag = false
-			}
 			fmt.Printf("Проверка на гамильтонов граф: %t\n", HamiltonFlag)
 		}
 		// проверка на эйлеров граф
 		{
 			EulerTour := myMenu.graph.EulerTour()
 
-			EulerFlag := true
-			if len(EulerTour) < 2 {
-				EulerFlag = false
-			}
+			EulerFlag := len(EulerTour) >= 2
+
 			fmt.Printf("Проверка на эйлеров граф: %t\n", EulerFlag)
 		}
 
@@ -382,7 +379,7 @@ func (myMenu *Menu) lab6() {
 	case 5:
 		myMenu.graph.OrientToUnoriet()
 
-		path := myMenu.graph.Hamiltonian()
+		path := myMenu.graph.Hamiltonian(0)
 
 		myMenu.graph.PrintLabel("Граф:")
 
@@ -397,8 +394,25 @@ func (myMenu *Menu) lab6() {
 		myMenu.graph.UnorientToOriet()
 
 	case 6:
+		myMenu.graph.OrientToUnoriet()
 
-		fmt.Println(" кнопочка 6")
+		path := myMenu.graph.Hamiltonian(0)
+
+		myMenu.graph.PrintLabel("Граф:")
+
+		if len(path) < 2 {
+
+			fmt.Println("в данном графе нет гамильтонова цикла\n")
+		} else {
+			fmt.Printf("гамильтонов цикл:  %v\n", path)
+			w := myMenu.graph.HamiltonWeight()
+
+			fmt.Println("стоимость пути комивояжера ", w)
+		}
+
+		fmt.Println()
+
+		myMenu.graph.UnorientToOriet()
 
 	default:
 		fmt.Println("не та кнопочка")

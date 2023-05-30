@@ -132,7 +132,7 @@ func (g *Graph) isEulerianCycle() (bool, int) {
 	return true, startVertex
 }
 
-// Метод printEulerTour выводит Эйлеров цикл или путь в графе.
+// Метод EulerTour возвращает Эйлеров цикл или путь в графе.
 func (g *Graph) EulerTour() []int {
 
 	Am := copy2DSlice(g.Amatrix)
