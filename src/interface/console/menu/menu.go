@@ -295,7 +295,7 @@ func (myMenu *Menu) Generated() {
 		fmt.Println("ввод кода Прюфера:\n")
 		a := 0
 		for i := 0; i < VCount-2; i++ {
-			fmt.Scan(&a)
+			_, _ = fmt.Scan(&a)
 			PrufferCode[i] = a
 		}
 		fmt.Println(PrufferCode) //fixme
@@ -344,7 +344,7 @@ func (myMenu *Menu) lab6() {
 		{
 			EulerTour := myMenu.graph.EulerTour()
 
-			EulerFlag := len(EulerTour) >= 2
+			EulerFlag := EulerTour[0] == EulerTour[len(EulerTour)-1]
 
 			fmt.Printf("Проверка на эйлеров граф: %t\n", EulerFlag)
 		}
@@ -366,12 +366,15 @@ func (myMenu *Menu) lab6() {
 
 		myMenu.graph.PrintLabel("Граф:")
 
-		if len(path) < 2 {
-			fmt.Println("в данном графе нет ейлерова цикла")
+		if len(path) < 3 {
+			fmt.Println("в данном графе нет эйлерова пути")
 		} else {
-			fmt.Printf("эйлеров цикл:  %v", path)
+			fmt.Printf("эйлеров путь:  %v \n", path)
 		}
 
+		if path[0] == path[len(path)-1] {
+			fmt.Printf("эйлеров путь является эйровым циклом:  %v \n", path)
+		}
 		fmt.Println()
 
 		myMenu.graph.UnorientToOriet()

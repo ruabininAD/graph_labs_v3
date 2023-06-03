@@ -177,6 +177,44 @@ func (g *Graph) EulerTour() []int {
 	return cycle
 }
 
+func (g *Graph) EEulerTour() []int {
+
+	adjMatrix := copy2DSlice(g.Amatrix)
+	var cycle []int
+
+	var dfs func(u int)
+	dfs = func(u int) {
+		for v := range adjMatrix[u] {
+			if adjMatrix[u][v] > 0 {
+				adjMatrix[u][v]--
+				adjMatrix[v][u]--
+				dfs(v)
+			}
+		}
+		cycle = append(cycle, u)
+	}
+
+	for i, row := range adjMatrix {
+		oddVertices := 0
+		for _, val := range row {
+			if val%2 == 1 {
+				oddVertices++
+			}
+		}
+		if oddVertices > 2 {
+			return []int{} // нет эйлерова цикла
+		}
+		if oddVertices%2 == 1 {
+			dfs(i) // начать с вершины нечетной степени, если такая есть
+		}
+	}
+	if len(cycle) == 0 {
+		dfs(0) // начать с вершины 0
+	}
+
+	return cycle
+}
+
 // Метод degree возвращает степень переданной вершины
 func (g *Graph) degree(vertex int) int {
 	degree := 0
@@ -202,52 +240,14 @@ func (G *Graph) EilerTransform() {
 	log.Print("делаем граф неориентированным")
 	G.OrientToUnoriet()
 
-	// список вершин с нечетной степенью
-	oddV := listOddV(G)
+	// соединяет все висячие вершины
+	G.connectPendantVertices()
 
-	fmt.Printf("список вершин с нечетными степенями %d \n", oddV)
-	G.PrintLabel("граф:")
+	//добавляет связи между вершинами с нечетной степенью
+	G.addOrDelOdd(true)
 
-	pairs := getPairs(oddV, 0)
-
-	for _, pair := range pairs {
-		if G.Amatrix[pair[0]][pair[1]] == 0 {
-
-			FlagP0inOddV := false
-			FlagP1inOddV := false
-
-			for _, v := range oddV {
-				if v == pair[0] {
-					FlagP0inOddV = true
-				}
-				if v == pair[1] {
-					FlagP1inOddV = true
-				}
-			}
-
-			//если оба значения есть в списке не четных
-			if FlagP0inOddV && FlagP1inOddV {
-				G.Amatrix[pair[0]][pair[1]] = 1
-				G.Amatrix[pair[1]][pair[0]] = 1
-
-				G.BandwidthMatrix[pair[0]][pair[1]] = 1
-				G.BandwidthMatrix[pair[1]][pair[0]] = 1
-
-				//удаляем вершины из списка не четных
-				for i, v := range oddV {
-					if v == pair[0] || v == pair[1] {
-						oddV[i] = -1
-					}
-
-				}
-
-				fmt.Printf("добавленая связь %d - %d\n", pair[0], pair[1])
-			}
-
-		} else {
-			continue
-		}
-	}
+	//удаляет связи между вершинами с нечетной степенью
+	G.addOrDelOdd(false)
 
 }
 
@@ -272,4 +272,110 @@ func getPairs(list []int, start int) [][]int {
 		pairs = append(pairs, getPairs(list, start+1)...)
 	}
 	return pairs
+}
+
+// Функция возвращает список висячих вершин
+func findPendantVertices(adjMatrix [][]int) []int {
+	var pendantVertices []int
+
+	for i, row := range adjMatrix {
+		degree := 0
+		for _, val := range row {
+			degree += val
+		}
+		if degree == 1 {
+			pendantVertices = append(pendantVertices, i)
+		}
+	}
+
+	return pendantVertices
+}
+
+// Функция соединяет висячие вершины
+func (G *Graph) connectPendantVertices() {
+	PendantVertices := findPendantVertices(G.Amatrix)
+
+	for len(PendantVertices) >= 2 {
+		u, v := PendantVertices[0], PendantVertices[1]
+		G.Amatrix[u][v] = 1
+		G.Amatrix[v][u] = 1
+
+		G.BandwidthMatrix[u][v] = 1
+		G.BandwidthMatrix[v][u] = 1
+
+		PendantVertices = PendantVertices[2:]
+	}
+
+	if len(PendantVertices) == 1 {
+		u := PendantVertices[0]
+		for v := range G.Amatrix {
+			if u != v {
+				G.Amatrix[u][v] = 1
+				G.Amatrix[v][u] = 1
+				break
+			}
+		}
+	}
+}
+
+// Удаление и добавление связей для вершин с нечетной степенью.
+// true - добавление flase-удаление
+func (G *Graph) addOrDelOdd(val bool) {
+
+	value := 0
+
+	if val == true {
+		value = 1
+	}
+
+	// список вершин с нечетной степенью
+	oddV := listOddV(G)
+
+	fmt.Printf("список вершин с нечетными степенями %d \n", oddV)
+	G.PrintLabel("граф:")
+
+	// все паросочетания нечетных вершин
+	pairs := getPairs(oddV, 0)
+
+	for _, pair := range pairs {
+		if G.Amatrix[pair[0]][pair[1]] == (value+1)%2 {
+
+			FlagP0inOddV := false
+			FlagP1inOddV := false
+
+			for _, v := range oddV {
+				if v == pair[0] {
+					FlagP0inOddV = true
+				}
+				if v == pair[1] {
+					FlagP1inOddV = true
+				}
+			}
+
+			//если оба значения есть в списке не четных
+			if FlagP0inOddV && FlagP1inOddV {
+				G.Amatrix[pair[0]][pair[1]] = value
+				G.Amatrix[pair[1]][pair[0]] = value
+
+				G.BandwidthMatrix[pair[0]][pair[1]] = value
+				G.BandwidthMatrix[pair[1]][pair[0]] = value
+
+				//удаляем вершины из списка не четных
+				for i, v := range oddV {
+					if v == pair[0] || v == pair[1] {
+						oddV[i] = -1
+					}
+
+				}
+
+				if val {
+					fmt.Printf("добавленая связь %d - %d\n", pair[0], pair[1])
+				} else {
+					fmt.Printf("удалена связь %d - %d\n", pair[0], pair[1])
+				}
+
+			}
+
+		}
+	}
 }

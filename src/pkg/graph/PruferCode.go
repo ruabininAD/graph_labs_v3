@@ -18,6 +18,10 @@ func AdjacencyMatrixToList(matrix [][]int) [][]int {
 }
 
 func (G *Graph) PruferCode() []int {
+	if G.vCount < 3 {
+		fmt.Println("В данном графе менее трех вершин ")
+		return []int{}
+	}
 	SpannindTree := copy2DSlice(G.KruskalAlgorithm())
 	for y := 0; y < G.vCount; y++ {
 		for x := y; x < G.vCount; x++ {
