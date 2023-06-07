@@ -490,7 +490,7 @@ func printResFloid(dist, next [][]int, paths map[string][]int) {
 	//for _, row := range next {
 	//	fmt.Println(row)
 	//}
-
+	//asdsad
 	// вывод всех путей
 	fmt.Println("Все пути:")
 	for key, value := range paths {
